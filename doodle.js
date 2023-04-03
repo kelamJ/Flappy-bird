@@ -49,6 +49,106 @@ class Doodler {
 
     moveRight() {
         this.vx += 4;
-        this.image.src
+        this.image.src = 'assets/doodler-right.png'
     }
+
+    moveLeft() {
+        this.vx += 4;
+        this.image.src = 'assets/doodler-left.png'
+    }
+
+
+    draw() {
+        this.content.drawImage(this.image, this.x, this.y, this.width, this.height);
+    }
+}
+
+class Platform {
+    // constructor for the class platform x for the horizontal
+    // and y for the vertical position
+    constructor(x, y ) {
+        this.context = canvas.getContext("2d");
+        this.image = new Image();
+        this.image.src = 'assets/background.png';
+        this.x = x;
+        this.y = y;
+        this.width = 100;
+        this.height = 20;
+    }
+
+    updatePosition() {
+        // TODO
+    }
+
+    draw() {
+        this.context.drawImage(this.image, this.x, this.y, this.width, this.height);
+    }
+}
+
+let platForms = [];
+const doodler = new Doodler();
+
+// helper function to get us a random number in between two numbers we need
+// to position the platform later on
+function randomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// to display the end menu we saw previously
+function showEndMenu() {
+    // TODO
+}
+
+function hideEndMenu() {
+    // TODO
+}
+
+// this is a fucntion which adds us all the listeners we need to be able to play 
+// doodle jump
+function addListeners() {
+    document.addEventListener('keydown', function(event) {
+        if(event.code === "ArrowLeft") {
+            doodler.moveLeft();
+        } else {
+            doodler.moveRight();
+        }
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if(event.code === "ArrowLeft" || event.code === "ArrowRight") {
+            doodler.vx = 0;
+        }
+    });
+
+    document.getElementById("retry").addEventListener('click', function() {
+        hideEndMenu();
+        resetGame();
+        // start loop here
+    }); 
+}
+
+// this is a fucntion which will create us the platforms for the begining
+// the platformgap here will be needed so the platforms dont stack on top
+// of each other and to position them vertically
+function createPlatforms() {
+    platFormGap = Math.round(canvas.height / platFormCount);
+
+    for(let i = 0; i < platFormCount; i++) {
+        // now we will add here a do while loop
+        // it is needed so we create the platfomrs always to the left and right and not in the middle,
+        //which is important in the begining of the game
+    }
+}
+
+function setup() {
+
+}
+
+
+function resetGame() {
+    //TODO
+}
+
+function loop() {
+    //TODO
 }
