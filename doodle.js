@@ -137,11 +137,23 @@ function createPlatforms() {
         // now we will add here a do while loop
         // it is needed so we create the platfomrs always to the left and right and not in the middle,
         //which is important in the begining of the game
+        let xpos = 0;
+        do {
+            xpos = randomInteger(25, canvas.width - 25 - 100);
+        } while (
+            xpos > canvas.width / 2 - 100 * 1.5 &&
+            xpos < canvas.width / 2 + 100 / 2
+        )
+        let y = (canvas.height / 1.5) - i * platFormGap;
+        platForms.push(new Platform(xpos, y));
     }
 }
 
+// we push as first platform a platform exactly there where the doodler
+// is so we can then strat the gamle when we move left or right
 function setup() {
-
+    platForms.push(new Platform(doodler.x, (doodler.y + 20)));
+    createPlatforms(6);
 }
 
 
@@ -150,5 +162,5 @@ function resetGame() {
 }
 
 function loop() {
-    //TODO
+    doodler.context
 }
