@@ -1,4 +1,4 @@
-const canvas = document.getElementById('game-canavs');
+const canvas = document.getElementById('game-canvas');
 let platFormGap = 0;
 let score = 0;
 let highScore = 0;
@@ -16,7 +16,7 @@ class Doodler {
         this.vx = 0;
         this.vy = 0;
         this.gravity = 0.03;
-        this.jumpStrength = -2.5;
+        this.jumpStrength = -2.6;
     }
 
     // function wich updates the position of the doodler
@@ -31,20 +31,52 @@ class Doodler {
         }
 
         this.checkForWrapDoodler();
+        this.checkCollisionWithPlatforms();
     }
 
     //function which checks wheter our doodler is outside the canvas horizontally f.e
     // doodler leaves the canvas to the left he will enter back into it on the right and vice versa
     checkForWrapDoodler() {
-        // TODO
+        if(this.x + this.width < 0) {
+            this.x = canvas.width;
+        } else if(this.x > canvas.width) {
+            this.x = 0 - this.width;
+        }
     }
 
+    // now we need to add a hitcollision so our doodler can jump upwards
     checkCollisionWithPlatforms() {
-        // TODO
+        // this here ensures that we only check if there is a collision
+        //while our doodler is falling down
+        if(this.vy <= 0) {
+            return;
+        }
+
+        // we male sure that the doodler is coming above the platform and the other
+        // conditions is a check wether two boxes intersect
+        for(let i = 0; i < platForms.length; i++) {
+            let platform = platForms[i];
+            if(
+                (this.prevY + this.height + 20) >= platform.y &&
+                this.x + this.width > platform.x &&
+                this.x < platform.x + platform.width &&
+                this.y + this.height > platform.y &&
+                this.y < platform.y + platform.height &&
+                this.prevY < platform.y
+            ) {
+                this.jump(platform);
+            }
+        }
     }
 
-    jump() {
-        // TODO
+    //this if in there ensures taht our doodler does not jump too fast
+    //upwards, because we would lose him then
+    jump(platform) {
+        let newHeight = platform.y - this.height;
+        if(newHeight > (canvas.height / 2 - 120)) {
+            this.y = platform.y - this.height;
+            this.vy = this.jumpStrength;
+        }
     }
 
     moveRight() {
@@ -53,13 +85,13 @@ class Doodler {
     }
 
     moveLeft() {
-        this.vx += 4;
+        this.vx -= 4;
         this.image.src = 'assets/doodler-left.png'
     }
 
 
     draw() {
-        this.content.drawImage(this.image, this.x, this.y, this.width, this.height);
+        this.context.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
 }
 
@@ -69,16 +101,15 @@ class Platform {
     constructor(x, y ) {
         this.context = canvas.getContext("2d");
         this.image = new Image();
-        this.image.src = 'assets/background.png';
+        this.image.src = 'assets/platform.png';
         this.x = x;
         this.y = y;
         this.width = 100;
         this.height = 20;
     }
 
-    updatePosition() {
-        // TODO
-    }
+    //this updateposition works for the platforms we need to make them move downwards,
+    // so it seems like the doodler is going up!
 
     draw() {
         this.context.drawImage(this.image, this.x, this.y, this.width, this.height);
@@ -96,11 +127,19 @@ function randomInteger(min, max) {
 
 // to display the end menu we saw previously
 function showEndMenu() {
-    // TODO
+    document.getElementById('end-game-menu').style.display = 'block';
+    document.getElementById('end-game-score').innerHTML = score;
+
+    // well we need to add the score
+    if(highScore < score) {
+        highScore = score;
+    }
+
+    document.getElementById('high-score').innerHTML = highScore;
 }
 
 function hideEndMenu() {
-    // TODO
+    document.getElementById('end-game-menu').style.display = 'none';
 }
 
 // this is a fucntion which adds us all the listeners we need to be able to play 
@@ -123,14 +162,14 @@ function addListeners() {
     document.getElementById("retry").addEventListener('click', function() {
         hideEndMenu();
         resetGame();
-        // start loop here
+        loop();
     }); 
 }
 
 // this is a fucntion which will create us the platforms for the begining
 // the platformgap here will be needed so the platforms dont stack on top
 // of each other and to position them vertically
-function createPlatforms() {
+function createPlatforms(platFormCount) {
     platFormGap = Math.round(canvas.height / platFormCount);
 
     for(let i = 0; i < platFormCount; i++) {
@@ -152,15 +191,75 @@ function createPlatforms() {
 // we push as first platform a platform exactly there where the doodler
 // is so we can then strat the gamle when we move left or right
 function setup() {
-    platForms.push(new Platform(doodler.x, (doodler.y + 20)));
+    platForms.push(new Platform(doodler.x, (doodler.y + 120)));
     createPlatforms(6);
 }
 
 
 function resetGame() {
-    //TODO
+    // now we need to be able to reset the game and also end the game
+    // if the doodler falls down
+    doodler.x = canvas.width / 2;
+    doodler.y = canvas.height - 100;
+    doodler.vx = 0;
+    doodler.vy = 0;
+    score = 0;
+    // we need to reset the platforms as well
+    platForms = [];
+    setup();
+}
+
+// to display the score in the top middle of the canvas
+function scoreText() {
+    doodler.context.font = '20px Arial';
+    doodler.context.fillStyle = 'black';
+    doodler.context.textAlign = 'center';
+    doodler.context.fillText(`Score: ${Math.round(score)}`, canvas.width / 2, 50);
+}
+
+//function to update the platforms - meaning we remove the ones wich are not visible
+// anymore and simultaneously we update the score
+function updatePlatformsAndScore() {
+    //this creates a copy of our array of platforms
+    let platformsCpy = [...platForms];
+    platForms = platForms.filter(platform_ => platform_.y < canvas.height);
+    score += platformsCpy.length - platForms.length;
 }
 
 function loop() {
-    doodler.context
+    doodler.context.clearRect(0, 0, canvas.width, canvas.height);
+
+    if(doodler.y < canvas.height / 2 && doodler.vy < 0) {
+        // we need to have it here and not in the platform class now we additionally
+        // need to create more platforms as we move up
+        platForms.forEach(platform => {
+            platform.y += -doodler.vy *2;
+        });
+
+        // we create here indefinely more platforms if we move up
+        platForms.push(new Platform(randomInteger(25, canvas.width - 25 - 100),
+            platForms[platForms.length -1].y - platFormGap * 2));
+    }
+    doodler.draw();
+    doodler.updatePosition();
+
+    platForms.forEach(platform => {
+        platform.draw();
+    });
+
+    scoreText();
+    // here we check the doodler fell down below all platforms
+    if(doodler.y > canvas.height) {
+        showEndMenu();
+        return;
+    }
+    
+
+    updatePlatformsAndScore();
+
+    requestAnimationFrame(loop);
 }
+
+addListeners();
+setup();
+loop();
